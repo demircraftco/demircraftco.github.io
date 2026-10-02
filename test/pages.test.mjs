@@ -38,12 +38,21 @@ test('the landing page and every page an app links to exist', () => {
   }
 });
 
+const SUPPORT_EMAIL = 'demircraftco@gmail.com';
+
+test('every support page offers the support e-mail as a mailto link', () => {
+  const support = pages.filter((p) => p.name.includes('support'));
+  assert.ok(support.length > 0);
+  for (const { name, html } of support) assert.match(html, /href="mailto:demircraftco@gmail\.com"/, name);
+});
+
 for (const { name, html } of pages) {
   test(`${name} is a well-formed, self-contained public page`, () => {
     assert.match(html, /<html lang="[a-z]{2}"/);
     assert.match(html, /<title>[^<]+<\/title>/);
     assert.doesNotMatch(html, /http:\/\//, 'insecure link');
-    assert.doesNotMatch(html, /[\w.+-]+@[\w-]+\.[\w.]+/, 'email address');
+    const emails = [...html.matchAll(/[\w.+-]+@[\w-]+\.[\w.]+/g)].map((m) => m[0]);
+    assert.deepStrictEqual(emails.filter((e) => e !== SUPPORT_EMAIL), [], 'only the public support address may appear');
     assert.doesNotMatch(html, /\/Users\//, 'machine path');
     assert.doesNotMatch(html, /<script/i, 'scripts are not allowed');
     for (const [, href] of html.matchAll(/<link[^>]+href="([^"]+)"/g)) {
